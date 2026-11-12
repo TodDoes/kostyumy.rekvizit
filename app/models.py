@@ -54,8 +54,8 @@ class User(Base):
 class Item(Base):
     __tablename__ = "items"
     __table_args__ = (
-        Index("ix_items_catalog", "publication_status", "availability", "category", "condition"),
-        Index("ix_items_search", "category", "style", "material"),
+        Index("ix_items_catalog", "publication_status", "availability", "category", "condition", "color"),
+        Index("ix_items_search", "category", "style", "material", "color", "size"),
         UniqueConstraint("owner_id", "idempotency_key", name="uq_item_idempotency"),
     )
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -64,9 +64,11 @@ class Item(Base):
     title: Mapped[str] = mapped_column(String(180), index=True)
     category: Mapped[str] = mapped_column(String(80), index=True)
     description: Mapped[str] = mapped_column(Text, default="")
-    material: Mapped[str] = mapped_column(String(120), default="", index=True)
-    size: Mapped[str] = mapped_column(String(80), default="", index=True)
-    style: Mapped[str] = mapped_column(String(100), default="", index=True)
+    color: Mapped[str] = mapped_column(String(80), index=True)
+    material: Mapped[str] = mapped_column(String(120), index=True)
+    size: Mapped[str] = mapped_column(String(80), index=True)
+    measurements: Mapped[str] = mapped_column(Text)
+    style: Mapped[str] = mapped_column(String(100), index=True)
     condition: Mapped[str] = mapped_column(String(80), index=True)
     defects: Mapped[str] = mapped_column(Text, default="")
     transfer_type: Mapped[str] = mapped_column(String(40), index=True)
@@ -118,6 +120,15 @@ class DealRequest(Base):
     status: Mapped[RequestStatus] = mapped_column(SqlEnum(RequestStatus), default=RequestStatus.NEW, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, onupdate=now)
+
+
+class Message(Base):
+    __tablename__ = "messages"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    request_id: Mapped[int] = mapped_column(ForeignKey("deal_requests.id", ondelete="CASCADE"), index=True)
+    sender_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    body: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
 
 
 class AuditLog(Base):

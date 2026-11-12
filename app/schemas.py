@@ -34,9 +34,11 @@ class ItemCreate(BaseModel):
     title: str = Field(min_length=2, max_length=180)
     category: str = Field(min_length=2, max_length=80)
     description: str = Field(default="", max_length=5000)
-    material: str = Field(default="", max_length=120)
-    size: str = Field(default="", max_length=80)
-    style: str = Field(default="", max_length=100)
+    color: str = Field(min_length=2, max_length=80)
+    material: str = Field(min_length=2, max_length=120)
+    size: str = Field(min_length=1, max_length=80)
+    measurements: str = Field(min_length=3, max_length=1000)
+    style: str = Field(min_length=2, max_length=100)
     condition: str = Field(min_length=2, max_length=80)
     defects: str = Field(default="", max_length=3000)
     transfer_type: str = Field(pattern="^(Аренда|Продажа|Передача)$")
@@ -52,6 +54,8 @@ class ItemOut(BaseModel):
     description: str
     material: str
     size: str
+    color: str
+    measurements: str
     style: str
     condition: str
     defects: str
@@ -85,3 +89,14 @@ class RequestOut(BaseModel):
 class ModerationIn(BaseModel):
     status: PublicationStatus
     reason: str = Field(default="", max_length=1000)
+
+
+class MessageCreate(BaseModel):
+    body: str = Field(min_length=1, max_length=3000)
+
+
+class MessageOut(BaseModel):
+    id: int
+    sender_id: int
+    body: str
+    created_at: datetime

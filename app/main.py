@@ -17,9 +17,9 @@ from .config import settings
 from .database import Base, engine
 from .dependencies import AdminUser, CurrentUser, Db, OptionalUser
 from .models import (AuditLog, Availability, DealRequest, Favorite, Item, ItemHistory,
-                     ItemPhoto, PublicationStatus, RequestStatus, Role, User, now)
-from .schemas import (ItemCreate, ItemOut, LoginIn, ModerationIn, RegisterIn, RequestCreate,
-                      RequestOut, RequestStatusUpdate, TokenOut, UserOut)
+                     ItemPhoto, Message, PublicationStatus, RequestStatus, Role, User, now)
+from .schemas import (ItemCreate, ItemOut, LoginIn, MessageCreate, MessageOut, ModerationIn,
+                      RegisterIn, RequestCreate, RequestOut, RequestStatusUpdate, TokenOut, UserOut)
 from .security import create_access_token, hash_password, verify_password
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
@@ -64,10 +64,11 @@ def item_or_404(db: Session, public_id: str) -> Item:
 def item_out(item: Item) -> ItemOut:
     return ItemOut(
         id=item.public_id, title=item.title, category=item.category, description=item.description,
-        material=item.material, size=item.size, style=item.style, condition=item.condition,
+        material=item.material, size=item.size, color=item.color, measurements=item.measurements,
+        style=item.style, condition=item.condition,
         defects=item.defects, transfer_type=item.transfer_type, price=item.price,
         availability=item.availability, publication_status=item.publication_status,
-        owner=UserOut.model_validate(item.owner), photos=[f"/uploads/{photo.path}" for photo in item.photos],
+        owner=UserOut.model_validate(item.owner), photos=[photo.path if photo.path.startswith(("http://", "https://")) else f"/uploads/{photo.path}" for photo in item.photos],
         created_at=item.created_at,
     )
 
@@ -110,17 +111,24 @@ def me(current_user: CurrentUser):
 @app.get("/api/items", response_model=list[ItemOut])
 def list_items(
     db: Db, q: str | None = None, category: str | None = None, size: str | None = None,
-    material: str | None = None, style: str | None = None, condition: str | None = None,
+    material: str | None = None, color: str | None = None, measurements: str | None = None,
+    style: str | None = None, condition: str | None = None,
     transfer_type: str | None = None, page: int = Query(1, ge=1), per_page: int = Query(12, ge=12, le=20),
 ):
     statement = select(Item).where(Item.publication_status == PublicationStatus.PUBLISHED, Item.availability == Availability.AVAILABLE)
-    for field, value in ((Item.category, category), (Item.size, size), (Item.material, material), (Item.style, style), (Item.condition, condition), (Item.transfer_type, transfer_type)):
+    for field, value in ((Item.category, category), (Item.size, size), (Item.material, material), (Item.color, color), (Item.measurements, measurements), (Item.style, style), (Item.condition, condition), (Item.transfer_type, transfer_type)):
         if value:
             statement = statement.where(field.ilike(f"%{value}%"))
     if q:
         like = f"%{q}%"
-        statement = statement.where(or_(Item.title.ilike(like), Item.description.ilike(like), Item.material.ilike(like)))
+        statement = statement.where(or_(Item.title.ilike(like), Item.description.ilike(like), Item.material.ilike(like), Item.color.ilike(like), Item.style.ilike(like)))
     items = db.scalars(statement.order_by(Item.created_at.desc()).offset((page - 1) * per_page).limit(per_page).options(selectinload(Item.owner), selectinload(Item.photos))).all()
+    return [item_out(item) for item in items]
+
+
+@app.get("/api/me/items", response_model=list[ItemOut])
+def my_items(current_user: CurrentUser, db: Db):
+    items = db.scalars(select(Item).where(Item.owner_id == current_user.id).order_by(Item.created_at.desc()).options(selectinload(Item.owner), selectinload(Item.photos))).all()
     return [item_out(item) for item in items]
 
 
@@ -258,12 +266,50 @@ def change_request_status(request_id: int, payload: RequestStatusUpdate, current
         raise HTTPException(status_code=403, detail="Менять статус могут только участники сделки")
     if payload.status not in REQUEST_TRANSITIONS[request.status]:
         raise HTTPException(status_code=422, detail="Недопустимый переход статуса")
+    if payload.status in {RequestStatus.AGREED, RequestStatus.COMPLETED} and current_user.id != request.owner_id:
+        raise HTTPException(status_code=403, detail="Подтверждать и завершать сделку может владелец изделия")
     request.status = payload.status
     item = db.get(Item, request.item_id)
     history(db, item, current_user.id, "request_status_changed", f"Статус заявки изменён на {payload.status.value}")
     audit(db, current_user.id, "request_status_changed", "request", str(request.id), payload.status.value)
     db.commit()
     return RequestOut(id=request.id, item_id=item.public_id, requester_id=request.requester_id, owner_id=request.owner_id, message=request.message, status=request.status, created_at=request.created_at)
+
+
+def request_or_403(request_id: int, current_user: User, db: Session) -> DealRequest:
+    request = db.get(DealRequest, request_id)
+    if not request:
+        raise HTTPException(status_code=404, detail="Заявка не найдена")
+    if current_user.id not in {request.requester_id, request.owner_id}:
+        raise HTTPException(status_code=403, detail="Переписка доступна только участникам сделки")
+    return request
+
+
+@app.get("/api/requests/{request_id}/messages", response_model=list[MessageOut])
+def get_messages(request_id: int, current_user: CurrentUser, db: Db):
+    request_or_403(request_id, current_user, db)
+    rows = db.scalars(select(Message).where(Message.request_id == request_id).order_by(Message.created_at)).all()
+    return [MessageOut(id=row.id, sender_id=row.sender_id, body=row.body, created_at=row.created_at) for row in rows]
+
+
+@app.post("/api/requests/{request_id}/messages", response_model=MessageOut, status_code=status.HTTP_201_CREATED)
+def send_message(request_id: int, payload: MessageCreate, current_user: CurrentUser, db: Db):
+    request = request_or_403(request_id, current_user, db)
+    if request.status in {RequestStatus.COMPLETED, RequestStatus.CANCELLED}:
+        raise HTTPException(status_code=422, detail="Переписка по закрытой сделке недоступна")
+    message = Message(request_id=request.id, sender_id=current_user.id, body=payload.body.strip())
+    db.add(message)
+    if request.status == RequestStatus.NEW:
+        request.status = RequestStatus.DISCUSSING
+    audit(db, current_user.id, "message_sent", "request", str(request.id))
+    db.commit()
+    return MessageOut(id=message.id, sender_id=message.sender_id, body=message.body, created_at=message.created_at)
+
+
+@app.get("/api/admin/items/pending", response_model=list[ItemOut])
+def pending_items(admin: AdminUser, db: Db):
+    items = db.scalars(select(Item).where(Item.publication_status == PublicationStatus.PENDING).order_by(Item.created_at).options(selectinload(Item.owner), selectinload(Item.photos))).all()
+    return [item_out(item) for item in items]
 
 
 @app.patch("/api/admin/items/{public_id}/moderation", response_model=ItemOut)
