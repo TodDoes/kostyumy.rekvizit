@@ -7,3 +7,4 @@ uploads/
 .pytest_cache/
 .coverage
 htmlcov/
+costumes.db
