@@ -41,7 +41,7 @@ docker compose exec api python -m app.seed
 - `PUT|DELETE /api/items/{id}/favorite`, `GET /api/me/favorites` — избранное.
 - `POST /api/items/{id}/requests`, `GET /api/me/requests`, `PATCH /api/requests/{id}/status` — заявки. Допустимые переходы: новая → обсуждение → согласована → завершена, с отменой до завершения; согласовать и завершить может владелец изделия.
 - `GET|POST /api/requests/{id}/messages` — переписка участников сделки; первое сообщение переводит новую заявку в обсуждение.
-- `GET /api/admin/items/pending`, `PATCH /api/admin/items/{id}/moderation` и `GET /api/admin/reports/deals.csv` — очередь модерации, решение модератора и CSV-отчёт.
+- `GET /api/admin/items/pending`, `GET /api/admin/items?publication_status=blocked`, `PATCH /api/admin/items/{id}/moderation` и `GET /api/admin/reports/deals.csv` — очередь модерации, доступ к отклонённым карточкам, решение модератора и CSV-отчёт.
 
 Все защищённые методы принимают `Authorization: Bearer <JWT>`. Роль администратора хранится в базе; её следует назначать через администрирование базы до появления отдельного интерфейса управления ролями.
 

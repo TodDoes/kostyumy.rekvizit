@@ -153,7 +153,7 @@ def create_item(payload: ItemCreate, current_user: CurrentUser, db: Db, idempote
 @app.get("/api/items/{public_id}", response_model=ItemOut)
 def get_item(public_id: str, db: Db, current_user: OptionalUser):
     item = item_or_404(db, public_id)
-    if item.publication_status != PublicationStatus.PUBLISHED and (not current_user or current_user.id != item.owner_id):
+    if item.publication_status != PublicationStatus.PUBLISHED and (not current_user or (current_user.id != item.owner_id and current_user.role != Role.ADMIN)):
         raise HTTPException(status_code=404, detail="Изделие не найдено")
     return item_out(item)
 
@@ -309,6 +309,15 @@ def send_message(request_id: int, payload: MessageCreate, current_user: CurrentU
 @app.get("/api/admin/items/pending", response_model=list[ItemOut])
 def pending_items(admin: AdminUser, db: Db):
     items = db.scalars(select(Item).where(Item.publication_status == PublicationStatus.PENDING).order_by(Item.created_at).options(selectinload(Item.owner), selectinload(Item.photos))).all()
+    return [item_out(item) for item in items]
+
+
+@app.get("/api/admin/items", response_model=list[ItemOut])
+def admin_items(admin: AdminUser, db: Db, publication_status: PublicationStatus | None = None):
+    statement = select(Item).order_by(Item.created_at.desc())
+    if publication_status:
+        statement = statement.where(Item.publication_status == publication_status)
+    items = db.scalars(statement.options(selectinload(Item.owner), selectinload(Item.photos))).all()
     return [item_out(item) for item in items]
 
 
