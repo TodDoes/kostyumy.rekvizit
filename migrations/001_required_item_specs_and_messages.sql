@@ -17,6 +17,14 @@ ALTER TABLE items ALTER COLUMN material SET NOT NULL;
 ALTER TABLE items ALTER COLUMN size SET NOT NULL;
 ALTER TABLE items ALTER COLUMN style SET NOT NULL;
 
+ALTER TABLE items DROP CONSTRAINT IF EXISTS ck_items_required_specs;
+ALTER TABLE items ADD CONSTRAINT ck_items_required_specs CHECK (
+    length(trim(title)) > 0 AND length(trim(category)) > 0 AND
+    length(trim(color)) > 0 AND length(trim(material)) > 0 AND
+    length(trim(size)) > 0 AND length(trim(measurements)) > 0 AND
+    length(trim(style)) > 0 AND length(trim(condition)) > 0
+);
+
 CREATE INDEX IF NOT EXISTS ix_items_catalog_specs
     ON items (publication_status, availability, category, condition, color);
 CREATE INDEX IF NOT EXISTS ix_items_search_specs

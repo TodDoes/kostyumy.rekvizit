@@ -33,8 +33,8 @@ def main() -> None:
         if db.query(Item).first():
             print("В базе уже есть карточки; сидер ничего не изменил.")
             return
-        admin = User(email="admin@costumes.local", name="Администратор", password_hash=hash_password("admin12345"), role=Role.ADMIN)
-        owner = User(email="alina@example.local", name="Алина Театрова", password_hash=hash_password("user12345"), role=Role.USER)
+        admin = User(email="admin.costumes.demo@gmail.com", name="Администратор", password_hash=hash_password("admin12345"), role=Role.ADMIN)
+        owner = User(email="alina.theatre.demo@gmail.com", name="Алина Театрова", password_hash=hash_password("user12345"), role=Role.USER)
         db.add_all([admin, owner]); db.flush()
         for index, (title, category, color, material, size, measurements, style, condition, transfer_type, price, photo_id) in enumerate(ITEMS):
             item = Item(owner_id=owner.id, title=title, category=category, color=color, material=material, size=size, measurements=measurements, style=style, condition=condition, defects="Следы сценического использования отсутствуют", transfer_type=transfer_type, price=price, publication_status=PublicationStatus.PENDING if index >= 13 else PublicationStatus.PUBLISHED)
@@ -43,7 +43,7 @@ def main() -> None:
             db.add(ItemPhoto(item_id=item.id, path=url, position=0))
             db.add(ItemHistory(item_id=item.id, author_id=owner.id, action="seeded", description="Карточка добавлена демонстрационным наполнением"))
         db.commit()
-        print("Добавлены 15 карточек. Админ: admin@costumes.local / admin12345")
+        print("Добавлены 15 карточек. Админ: admin.costumes.demo@gmail.com / admin12345")
 
 
 if __name__ == "__main__":

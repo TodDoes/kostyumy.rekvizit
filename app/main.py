@@ -7,7 +7,7 @@ import csv
 
 import qrcode
 import qrcode.image.svg
-from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, Response, UploadFile, status
+from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Query, Response, UploadFile, status
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import or_, select
@@ -133,7 +133,7 @@ def my_items(current_user: CurrentUser, db: Db):
 
 
 @app.post("/api/items", response_model=ItemOut, status_code=status.HTTP_201_CREATED)
-def create_item(payload: ItemCreate, current_user: CurrentUser, db: Db, idempotency_key: str | None = Query(None, max_length=100)):
+def create_item(payload: ItemCreate, current_user: CurrentUser, db: Db, idempotency_key: str | None = Header(None, max_length=100)):
     if idempotency_key:
         existing = db.scalar(select(Item).where(Item.owner_id == current_user.id, Item.idempotency_key == idempotency_key).options(selectinload(Item.owner), selectinload(Item.photos)))
         if existing:

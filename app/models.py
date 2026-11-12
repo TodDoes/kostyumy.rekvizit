@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from uuid import uuid4
 
-from sqlalchemy import Boolean, DateTime, Enum as SqlEnum, ForeignKey, Index, Integer, Numeric, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, CheckConstraint, DateTime, Enum as SqlEnum, ForeignKey, Index, Integer, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
@@ -57,6 +57,7 @@ class Item(Base):
         Index("ix_items_catalog", "publication_status", "availability", "category", "condition", "color"),
         Index("ix_items_search", "category", "style", "material", "color", "size"),
         UniqueConstraint("owner_id", "idempotency_key", name="uq_item_idempotency"),
+        CheckConstraint("length(trim(title)) > 0 AND length(trim(category)) > 0 AND length(trim(color)) > 0 AND length(trim(material)) > 0 AND length(trim(size)) > 0 AND length(trim(measurements)) > 0 AND length(trim(style)) > 0 AND length(trim(condition)) > 0", name="ck_items_required_specs"),
     )
     id: Mapped[int] = mapped_column(primary_key=True)
     public_id: Mapped[str] = mapped_column(String(36), unique=True, default=lambda: str(uuid4()), index=True)

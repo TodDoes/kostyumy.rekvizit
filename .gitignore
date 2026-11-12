@@ -8,3 +8,4 @@ uploads/
 .coverage
 htmlcov/
 costumes.db
+seed_demo.db
