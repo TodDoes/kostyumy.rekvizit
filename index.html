@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Костюмы.Реквизит — C2C-маркетплейс театрального реквизита</title>
+    <link rel="stylesheet" href="./styles.css">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- QR Code Generator Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f4f8',
+                            100: '#d9e2ec',
+                            500: '#334e68',
+                            600: '#243b53',
+                            700: '#102a43',
+                            800: '#0b1b2b',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased h-screen flex flex-col overflow-hidden">
+
+    <!-- TOP HEADER -->
+    <header class="bg-white border-b border-slate-200 px-4 py-2.5 flex items-center justify-between z-20 shrink-0 shadow-sm">
+        <div class="flex items-center space-x-3 md:space-x-6">
+            <button id="mobile-menu-btn" class="md:hidden text-slate-600 hover:text-slate-900 focus:outline-none">
+                <i data-lucide="menu" class="w-6 h-6"></i>
+            </button>
+            <!-- Logo -->
+            <div class="flex items-center space-x-2 cursor-pointer" onclick="switchTab('catalog')">
+                <div class="bg-brand-700 text-white p-2 rounded-xl">
+                    <i data-lucide="masks" class="w-5 h-5"></i>
+                </div>
+                <span class="font-bold text-lg tracking-tight text-brand-800">Костюмы<span class="text-slate-400">.</span>Реквизит</span>
+            </div>
+        </div>
+
+        <!-- Global Search Bar -->
+        <div class="hidden sm:flex flex-1 max-w-md mx-6 relative">
+            <input type="text" id="global-search" placeholder="Поиск по названию, категории, эпохе, материалу..." 
+                class="w-full pl-10 pr-4 py-2 bg-slate-100 border border-transparent rounded-xl text-sm focus:bg-white focus:border-brand-500 focus:outline-none transition">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-3 text-slate-400"></i>
+        </div>
+
+        <!-- User Controls / Tab Navigation Quick Links -->
+        <div class="flex items-center space-x-2 md:space-x-3">
+            <button onclick="switchTab('add-listing')" class="hidden sm:flex items-center space-x-1.5 bg-brand-700 hover:bg-brand-800 text-white text-xs md:text-sm font-medium px-3.5 py-2 rounded-xl transition shadow-sm">
+                <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                <span>Объявление</span>
+            </button>
+            <button class="relative p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition" onclick="switchTab('requests')">
+                <i data-lucide="bell" class="w-5 h-5"></i>
+                <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-amber-500 rounded-full"></span>
+            </button>
+            <div class="h-6 w-px bg-slate-200 hidden md:block"></div>
+            <div class="flex items-center space-x-2 cursor-pointer pl-1" onclick="switchTab('profile')">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80" alt="Avatar" class="w-8 h-8 rounded-full object-cover border border-slate-300">
+                <span class="hidden md:inline text-sm font-medium text-slate-700">Алина А.</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN BODY (Sidebar + Dynamic Content Area) -->
+    <div class="flex flex-1 overflow-hidden relative">
+
+        <!-- SIDEBAR (Desktop & Mobile Drawer) -->
+        <aside id="sidebar" class="absolute md:relative z-10 w-64 h-full bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 -translate-x-full md:translate-x-0 shrink-0">
+            <div class="p-4 space-y-1 overflow-y-auto custom-scrollbar">
+                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider px-3 mb-2">Навигация</div>
+                
+                <button onclick="switchTab('catalog')" id="nav-catalog" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition">
+                    <i data-lucide="home" class="w-5 h-5"></i>
+                    <span>Главная / Каталог</span>
+                </button>
+
+                <button onclick="switchTab('my-listings')" id="nav-my-listings" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition">
+                    <i data-lucide="package" class="w-5 h-5"></i>
+                    <span>Мои объявления</span>
+                </button>
+
+                <button onclick="switchTab('requests')" id="nav-requests" class="nav-item w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition">
+                    <div class="flex items-center space-x-3">
+                        <i data-lucide="file-text" class="w-5 h-5"></i>
+                        <span>Заявки</span>
+                    </div>
+                    <span class="bg-brand-100 text-brand-700 text-xs font-semibold px-2 py-0.5 rounded-full">3</span>
+                </button>
+
+                <button onclick="switchTab('favorites')" id="nav-favorites" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition">
+                    <i data-lucide="heart" class="w-5 h-5"></i>
+                    <span>Избранное</span>
+                </button>
+
+            </div>
+        </aside>
+
+        <!-- MAIN VIEWPORT CONTAINER -->
+        <main class="flex-1 bg-slate-50 overflow-y-auto custom-scrollbar p-4 md:p-6" id="main-content">
+
+            <!-- ========================================== -->
+            <!-- TAB 1: MAIN / CATALOG SCREEN              -->
+            <!-- ========================================== -->
+            <section id="view-catalog" class="tab-view space-y-6">
+                <!-- Hero Banner -->
+                <div class="relative bg-gradient-to-r from-brand-800 to-brand-600 rounded-2xl overflow-hidden shadow-sm text-white p-6 md:p-8 flex flex-col md:flex-row items-center justify-between">
+                    <div class="max-w-xl z-10 space-y-3">
+                        <h1 class="text-2xl md:text-3xl font-bold tracking-tight">Театральный реквизит для ваших проектов</h1>
+                        <p class="text-sm text-slate-200 leading-relaxed">Костюмы, аксессуары, декорации и бутафория от частных мастеров, театров и коллекционеров с историей использования.</p>
+                        <div class="pt-2 flex flex-wrap gap-3">
+                            <button onclick="scrollToCatalog()" class="px-5 py-2.5 bg-white text-brand-800 font-medium text-sm rounded-xl hover:bg-slate-100 transition shadow-sm">Перейти к каталогу</button>
+                            <button onclick="switchTab('add-listing')" class="px-5 py-2.5 bg-brand-700/60 border border-white/20 text-white font-medium text-sm rounded-xl hover:bg-brand-700 transition">Сдать реквизит</button>
+                        </div>
+                    </div>
+                    <div class="mt-6 md:mt-0 w-full md:w-auto flex justify-center z-10">
+                        <img src="https://images.unsplash.com/photo-1518834107812-67b0b7c58434?auto=format&fit=crop&w=400&q=80" alt="Theatre Prop" class="w-48 h-36 md:w-64 md:h-44 object-cover rounded-xl shadow-lg border-2 border-white/20">
+                    </div>
+                </div>
+
+                <!-- Main Catalog Area with Search Filters -->
+                <div id="catalog-section" class="pt-2">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-800">Все объявления</h2>
+                            <p class="text-xs text-slate-500">Найдено <span id="item-count">0</span> предметов</p>
+                        </div>
+                        
+                        <!-- Sort & Filter Toggle -->
+                        <div class="flex items-center space-x-2">
+                            <select id="sort-select" onchange="applyFilters()" class="bg-white border border-slate-200 text-xs rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-brand-500">
+                                <option value="newest">Сначала новые</option>
+                                <option value="price-asc">Цена: по возрастанию</option>
+                                <option value="price-desc">Цена: по убыванию</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                        <!-- Filters Sidebar -->
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 h-fit space-y-4">
+                            <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                                <span class="font-semibold text-sm text-slate-800 flex items-center space-x-1.5">
+                                    <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+                                    <span>Фильтры</span>
+                                </span>
+                                <button onclick="resetFilters()" class="text-xs text-brand-600 hover:underline">Сбросить</button>
+                            </div>
+
+                            <!-- Filter: Category -->
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Категория</label>
+                                <select id="filter-category" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none">
+                                    <option value="">Все категории</option>
+                                    <option value="Костюмы">Костюмы</option>
+                                    <option value="Обувь">Обувь</option>
+                                    <option value="Головные уборы">Головные уборы</option>
+                                    <option value="Аксессуары">Аксессуары</option>
+                                    <option value="Бутафория">Бутафория</option>
+                                    <option value="Декорации">Декорации</option>
+                                </select>
+                            </div>
+
+                            <!-- Filter: Type -->
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-2">Тип сделки</label>
+                                <div class="space-y-1.5 text-sm">
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" value="Аренда" class="filter-type rounded border-slate-300 text-brand-600 focus:ring-brand-500" onchange="applyFilters()">
+                                        <span class="text-xs text-slate-700">Аренда</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" value="Продажа" class="filter-type rounded border-slate-300 text-brand-600 focus:ring-brand-500" onchange="applyFilters()">
+                                        <span class="text-xs text-slate-700">Продажа</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Filter: Era/Style -->
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Эпоха / Стиль</label>
+                                <select id="filter-era" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none">
+                                    <option value="">Все эпохи</option>
+                                    <option value="Возрождение">Возрождение</option>
+                                    <option value="XIX век">XIX век</option>
+                                    <option value="Барокко">Барокко</option>
+                                    <option value="Современность">Современность</option>
+                                </select>
+                            </div>
+
+                            <!-- Filter: Condition -->
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Состояние</label>
+                                <select id="filter-condition" onchange="applyFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none">
+                                    <option value="">Любое состояние</option>
+                                    <option value="Отличное">Отличное</option>
+                                    <option value="Хорошее">Хорошее</option>
+                                    <option value="Требует реставрации">Требует реставрации</option>
+                                </select>
+                            </div>
+
+                            <!-- Filter: Material -->
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Материал</label>
+                                <input type="text" id="filter-material" placeholder="Бархат, кожи и т.д." oninput="applyFilters()" 
+                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none">
+                            </div>
+                        </div>
+
+                        <!-- Product Cards Grid -->
+                        <div class="lg:col-span-3">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4" id="listings-grid">
+                                <!-- Dynamically filled with products -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- TAB 2: PRODUCT DETAIL SCREEN               -->
+            <!-- ========================================== -->
+            <section id="view-product-detail" class="tab-view space-y-6 hidden">
+                <!-- Breadcrumbs & Actions -->
+                <div class="flex items-center justify-between text-xs text-slate-500">
+                    <button onclick="switchTab('catalog')" class="flex items-center space-x-1 hover:text-slate-800">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                        <span>Назад в каталог</span>
+                    </button>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="openQrModal('demo-qr')" class="flex items-center space-x-1 bg-white border border-slate-200 px-3 py-1.5 rounded-xl text-slate-700 hover:bg-slate-50">
+                            <i data-lucide="qr-code" class="w-4 h-4"></i>
+                            <span>Показать QR-код</span>
+                        </button>
+                        <button class="p-1.5 bg-white border border-slate-200 rounded-xl text-slate-600 hover:text-red-500">
+                            <i data-lucide="heart" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Product Detail Header Grid -->
+                <div class="bg-white p-5 md:p-6 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-12 gap-6">
+                    <!-- Left Gallery -->
+                    <div class="md:col-span-5 space-y-3">
+                        <div class="aspect-square bg-slate-100 rounded-xl overflow-hidden relative">
+                            <img id="detail-main-img" src="https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=600&q=80" alt="Product Image" class="w-full h-full object-cover">
+                            <span class="absolute top-3 left-3 bg-emerald-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">Доступен</span>
+                        </div>
+                        <!-- Thumbnails -->
+                        <div class="grid grid-cols-4 gap-2">
+                            <img src="https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=150&q=80" onclick="setDetailImage(this.src)" class="aspect-square object-cover rounded-lg border-2 border-brand-500 cursor-pointer">
+                            <img src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=150&q=80" onclick="setDetailImage(this.src)" class="aspect-square object-cover rounded-lg border border-slate-200 cursor-pointer opacity-70 hover:opacity-100">
+                            <img src="https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=150&q=80" onclick="setDetailImage(this.src)" class="aspect-square object-cover rounded-lg border border-slate-200 cursor-pointer opacity-70 hover:opacity-100">
+                            <div class="aspect-square bg-slate-100 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 font-medium text-xs cursor-pointer">+2 фото</div>
+                        </div>
+                    </div>
+
+                    <!-- Right Info Box -->
+                    <div class="md:col-span-7 flex flex-col justify-between space-y-4">
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-semibold text-brand-600 bg-brand-50 px-2.5 py-1 rounded-lg">Костюмы / Исторические</span>
+                                <span class="text-xs text-slate-400">ID: PR-2026-089</span>
+                            </div>
+                            <h1 class="text-2xl font-bold text-slate-800 mt-2">Костюм эпохи Возрождения (Мужской дублет)</h1>
+                            
+                            <!-- Price & Terms -->
+                            <div class="mt-3 flex items-baseline space-x-3">
+                                <span class="text-3xl font-bold text-slate-900">12 000 ₽</span>
+                                <span class="text-sm text-slate-500">/ аренда на проект (до 5 дней)</span>
+                            </div>
+
+                            <!-- Attributes Quick Table -->
+                            <div class="grid grid-cols-2 gap-3 mt-6 p-4 bg-slate-50 rounded-xl text-xs">
+                                <div><span class="text-slate-400 block">Эпоха / Стиль:</span> <span class="font-medium text-slate-700">Возрождение / XVI век</span></div>
+                                <div><span class="text-slate-400 block">Материал:</span> <span class="font-medium text-slate-700">Бархат, парча, кружево</span></div>
+                                <div><span class="text-slate-400 block">Размер:</span> <span class="font-medium text-slate-700">48-50 (M/L)</span></div>
+                                <div><span class="text-slate-400 block">Состояние:</span> <span class="font-medium text-slate-700">Хорошее (винтаж)</span></div>
+                                <div><span class="text-slate-400 block">Комплект:</span> <span class="font-medium text-slate-700">Козлет, колет, брэ</span></div>
+                                <div><span class="text-slate-400 block">Город:</span> <span class="font-medium text-slate-700">Санкт-Петербург</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Owner Card & Call to Actions -->
+                        <div class="space-y-3 pt-4 border-t border-slate-100">
+                            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                                <div class="flex items-center space-x-3">
+                                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80" alt="Owner" class="w-10 h-10 rounded-full object-cover">
+                                    <div>
+                                        <p class="text-xs font-bold text-slate-800">Театр «Малый Переулок»</p>
+                                        <p class="text-[11px] text-slate-500">Владелец костюмерного фонда</p>
+                                    </div>
+                                </div>
+                                <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-md font-medium">Проверен</span>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <button onclick="openRequestModal()" class="w-full py-3 bg-brand-700 hover:bg-brand-800 text-white font-medium text-sm rounded-xl transition shadow-sm flex items-center justify-center space-x-2">
+                                    <i data-lucide="send" class="w-4 h-4"></i>
+                                    <span>Оформить заявку</span>
+                                </button>
+                                <button onclick="openChatModal()" class="w-full py-3 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium text-sm rounded-xl transition flex items-center justify-center space-x-2">
+                                    <i data-lucide="message-square" class="w-4 h-4"></i>
+                                    <span>Написать продавцу</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs Section (Description / Specifications / History / QR) -->
+                <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                    <div class="flex border-b border-slate-200 bg-slate-50/50">
+                        <button onclick="setDetailTab('desc')" id="tab-btn-desc" class="detail-tab-btn py-3 px-5 text-xs md:text-sm font-semibold text-brand-700 border-b-2 border-brand-700 bg-white">Описание</button>
+                        <button onclick="setDetailTab('specs')" id="tab-btn-specs" class="detail-tab-btn py-3 px-5 text-xs md:text-sm font-semibold text-slate-500 hover:text-slate-800">Характеристики</button>
+                        <button onclick="setDetailTab('history')" id="tab-btn-history" class="detail-tab-btn py-3 px-5 text-xs md:text-sm font-semibold text-slate-500 hover:text-slate-800 flex items-center space-x-1">
+                            <span>История использования</span>
+                            <span class="bg-slate-200 text-slate-700 text-[10px] px-1.5 py-0.5 rounded-full">2</span>
+                        </button>
+                    </div>
+
+                    <div class="p-5 md:p-6 text-sm text-slate-600">
+                        <!-- Tab Content: Description -->
+                        <div id="detail-tab-desc" class="tab-content space-y-3">
+                            <p>Аутентичная стилизация мужского костюма эпохи Возрождения (Италия/Франция XVI век). Выполнен из тяжелого темно-бордового бархата с отделкой золотистой парчой и ручной вышивкой.</p>
+                            <p>Костюм идеально подходит для классических постановкок («Ромео и Джульетта», «Гамлет»), исторических киносъемок и фотосессий. Проходил реставрацию в 2025 году.</p>
+                            <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs mt-3">
+                                <strong>Обратите внимание:</strong> Требуется бережная бережная чистка. Запрещена стирка в автоматических машинах.
+                            </div>
+                        </div>
+
+                        <!-- Tab Content: Specs -->
+                        <div id="detail-tab-specs" class="tab-content hidden space-y-2">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-xs">
+                                <div class="flex justify-between py-1 border-b border-slate-100"><span class="text-slate-400">Обхват груди:</span><span class="font-medium text-slate-700">98-104 см</span></div>
+                                <div class="flex justify-between py-1 border-b border-slate-100"><span class="text-slate-400">Длина по спине:</span><span class="font-medium text-slate-700">78 см</span></div>
+                                <div class="flex justify-between py-1 border-b border-slate-100"><span class="text-slate-400">Застежка:</span><span class="font-medium text-slate-700">Потайная шнуровка + крючки</span></div>
+                                <div class="flex justify-between py-1 border-b border-slate-100"><span class="text-slate-400">Подкладка:</span><span class="font-medium text-slate-700">100% Хлопок</span></div>
+                                <div class="flex justify-between py-1 border-b border-slate-100"><span class="text-slate-400">Дефекты:</span><span class="font-medium text-slate-700">Небольшие потертости на рукаве</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Tab Content: History -->
+                        <div id="detail-tab-history" class="tab-content hidden space-y-4">
+                            <p class="text-xs text-slate-500">Проверенная история участия предмета в постановках и съемках:</p>
+                            <div class="relative pl-6 border-l-2 border-brand-200 space-y-4">
+                                <div class="relative">
+                                    <div class="absolute -left-[31px] top-0 w-4 h-4 bg-brand-600 rounded-full border-2 border-white"></div>
+                                    <span class="text-xs font-bold text-slate-800">Спектакль «Двое в вечности»</span>
+                                    <span class="text-xs text-slate-400 block">Октябрь 2025 — Театр БДТ</span>
+                                    <p class="text-xs text-slate-600 mt-1">Использовался для роли главного графа. Состояние после возврата: без повреждений.</p>
+                                </div>
+                                <div class="relative">
+                                    <div class="absolute -left-[31px] top-0 w-4 h-4 bg-brand-300 rounded-full border-2 border-white"></div>
+                                    <span class="text-xs font-bold text-slate-800">Фотосессия журнала «Сцена»</span>
+                                    <span class="text-xs text-slate-400 block">Май 2024 — Студия №4</span>
+                                    <p class="text-xs text-slate-600 mt-1">Интерьерная съёмка.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- TAB 3: ADD NEW LISTING FORM                -->
+            <!-- ========================================== -->
+            <section id="view-add-listing" class="tab-view max-w-2xl mx-auto space-y-6 hidden">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="border-b border-slate-100 pb-4 mb-5">
+                        <h1 class="text-xl font-bold text-slate-800">Новое объявление</h1>
+                        <p class="text-xs text-slate-500">Заполните карточку театрального реквизита для публикации в каталоге</p>
+                    </div>
+
+                    <form id="new-listing-form" onsubmit="handleCreateListing(event)" class="space-y-4">
+                        <!-- Photo Upload Placeholder -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Фотографии предмета *</label>
+                            <div class="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center bg-slate-50 hover:bg-slate-100/80 cursor-pointer transition">
+                                <i data-lucide="upload-cloud" class="w-8 h-8 text-slate-400 mx-auto mb-2"></i>
+                                <p class="text-xs font-medium text-slate-700">Нажмите для загрузки или перетащите фото</p>
+                                <p class="text-[11px] text-slate-400 mt-1">До 10 фотографий в формате JPG, PNG (до 5 МБ)</p>
+                            </div>
+                        </div>
+
+                        <!-- Title -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Название предмета *</label>
+                            <input type="text" required placeholder="Например: Шляпа винтажная XIX век" 
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-800 focus:outline-none focus:border-brand-500">
+                        </div>
+
+                        <!-- Category & Era Grid -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Категория *</label>
+                                <select required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-brand-500">
+                                    <option value="">Выберите категорию</option>
+                                    <option value="Костюмы">Костюмы</option>
+                                    <option value="Обувь">Обувь</option>
+                                    <option value="Головные уборы">Головные уборы</option>
+                                    <option value="Аксессуары">Аксессуары</option>
+                                    <option value="Бутафория">Бутафория</option>
+                                    <option value="Декорации">Декорации</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Эпоха / Стиль</label>
+                                <select class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-brand-500">
+                                    <option value="Возрождение">Возрождение</option>
+                                    <option value="XIX век">XIX век</option>
+                                    <option value="Барокко">Барокко</option>
+                                    <option value="Современность">Современность</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Transfer Type & Price -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Тип передачи *</label>
+                                <div class="flex items-center space-x-4 pt-1">
+                                    <label class="flex items-center space-x-2 text-xs text-slate-700 cursor-pointer">
+                                        <input type="radio" name="deal-type" value="Аренда" checked class="text-brand-600 focus:ring-brand-500">
+                                        <span>Аренда</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 text-xs text-slate-700 cursor-pointer">
+                                        <input type="radio" name="deal-type" value="Продажа" class="text-brand-600 focus:ring-brand-500">
+                                        <span>Продажа</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Цена (₽) *</label>
+                                <input type="number" required placeholder="3500" 
+                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-800 focus:outline-none focus:border-brand-500">
+                            </div>
+                        </div>
+
+                        <!-- Availability -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Статус *</label>
+                            <select required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-brand-500">
+                                <option value="Доступен">Доступен</option>
+                                <option value="Забронирован">Забронирован</option>
+                                <option value="Недоступен">Недоступен</option>
+                            </select>
+                        </div>
+
+                        <!-- Description -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Описание и особенности</label>
+                            <textarea rows="3" placeholder="Опишите состояние, мерки, особенности ухода или дефекты..." 
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-800 focus:outline-none focus:border-brand-500"></textarea>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="pt-3">
+                            <button type="submit" class="w-full py-3 bg-brand-700 hover:bg-brand-800 text-white font-medium text-sm rounded-xl transition shadow-sm">
+                                Опубликовать объявление
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- TAB 4: REQUESTS & DEALS LIST               -->
+            <!-- ========================================== -->
+            <section id="view-requests" class="tab-view space-y-6 hidden">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-xl font-bold text-slate-800">Заявки и сделки</h1>
+                        <p class="text-xs text-slate-500">Управление запросами на аренду и покупку реквизита</p>
+                    </div>
+                </div>
+
+                <!-- Requests List -->
+                <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                    <div class="p-4 bg-slate-50/50 border-b border-slate-200 flex items-center justify-between text-xs font-semibold text-slate-500">
+                        <span>Список активных заявок</span>
+                        <span>Всего: 3</span>
+                    </div>
+
+                    <div class="divide-y divide-slate-100">
+                        <!-- Request item 1 -->
+                        <div class="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/50 transition">
+                            <div class="flex items-start space-x-3">
+                                <img src="https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=100&q=80" alt="Item" class="w-12 h-12 rounded-xl object-cover">
+                                <div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-xs font-bold text-slate-800">Заявка #REQ-104</span>
+                                        <span class="bg-amber-100 text-amber-800 text-[10px] font-semibold px-2 py-0.5 rounded-md">В обсуждении</span>
+                                    </div>
+                                    <p class="text-xs font-medium text-slate-700 mt-0.5">Костюм эпохи Возрождения</p>
+                                    <p class="text-[11px] text-slate-400">Заявитель: Театр «Современный Взгляд» • Срок: 12.11 - 18.11</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="openChatModal()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-xl transition">Чат</button>
+                                <button onclick="updateStatus(this, 'Согласована')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded-xl transition">Подтвердить</button>
+                            </div>
+                        </div>
+
+                        <!-- Request item 2 -->
+                        <div class="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/50 transition">
+                            <div class="flex items-start space-x-3">
+                                <img src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=100&q=80" alt="Item" class="w-12 h-12 rounded-xl object-cover">
+                                <div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-xs font-bold text-slate-800">Заявка #REQ-098</span>
+                                        <span class="bg-emerald-100 text-emerald-800 text-[10px] font-semibold px-2 py-0.5 rounded-md">Согласована</span>
+                                    </div>
+                                    <p class="text-xs font-medium text-slate-700 mt-0.5">Шляпа винтажная цилиндр</p>
+                                    <p class="text-[11px] text-slate-400">Заявитель: Киностудия «Север» • Срок: 01.11 - 03.11</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="openQrModal('REQ-098')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-xl transition flex items-center space-x-1">
+                                    <i data-lucide="qr-code" class="w-3.5 h-3.5"></i>
+                                    <span>QR-код передачи</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Request item 3 -->
+                        <div class="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/50 transition">
+                            <div class="flex items-start space-x-3">
+                                <img src="https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=100&q=80" alt="Item" class="w-12 h-12 rounded-xl object-cover">
+                                <div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-xs font-bold text-slate-800">Заявка #REQ-085</span>
+                                        <span class="bg-blue-100 text-blue-800 text-[10px] font-semibold px-2 py-0.5 rounded-md">Новая</span>
+                                    </div>
+                                    <p class="text-xs font-medium text-slate-700 mt-0.5">Маска театральная венецианская</p>
+                                    <p class="text-[11px] text-slate-400">Заявитель: Частное лицо (Иван К.) • Аренда</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="openChatModal()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-xl transition">Ответить</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- TAB 5: MY LISTINGS & FAVORITES PLACEHOLDER  -->
+            <!-- ========================================== -->
+            <section id="view-my-listings" class="tab-view space-y-4 hidden">
+                <h1 class="text-xl font-bold text-slate-800">Мои объявления</h1>
+                <div class="bg-white p-8 rounded-2xl border border-slate-200 text-center text-slate-500">
+                    <i data-lucide="package-open" class="w-12 h-12 mx-auto mb-2 text-slate-300"></i>
+                    <p class="text-sm font-medium">У вас опубликовано 2 объявления</p>
+                    <button onclick="switchTab('add-listing')" class="mt-3 px-4 py-2 bg-brand-700 text-white text-xs font-medium rounded-xl">Добавить еще</button>
+                </div>
+            </section>
+
+            <section id="view-favorites" class="tab-view space-y-4 hidden">
+                <h1 class="text-xl font-bold text-slate-800">Избранное</h1>
+                <div class="bg-white p-8 rounded-2xl border border-slate-200 text-center text-slate-500">
+                    <i data-lucide="heart" class="w-12 h-12 mx-auto mb-2 text-slate-300"></i>
+                    <p class="text-sm font-medium">В избранном пока 1 предмет</p>
+                </div>
+            </section>
+
+            <section id="view-profile" class="tab-view space-y-4 hidden">
+                <h1 class="text-xl font-bold text-slate-800">Профиль пользователя</h1>
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 max-w-md space-y-3">
+                    <div class="flex items-center space-x-3">
+                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80" class="w-14 h-14 rounded-full object-cover">
+                        <div>
+                            <p class="font-bold text-slate-800">Алина Авенян</p>
+                            <p class="text-xs text-slate-500">Частный мастер / Театральный костюмер</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODALS & POPUPS                            -->
+    <!-- ========================================== -->
+
+    <!-- QR CODE MODAL -->
+    <div id="qr-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white p-6 rounded-2xl max-w-sm w-full space-y-4 text-center shadow-xl">
+            <h3 class="font-bold text-slate-800 text-lg">QR-код предмета</h3>
+            <p class="text-xs text-slate-500">Отсканируйте код для быстрого перехода к паспорту реквизита или подтверждения передачи</p>
+            <div id="qrcode-container" class="flex justify-center p-4 bg-slate-50 rounded-xl border border-slate-100"></div>
+            <p class="text-[11px] font-mono text-slate-400" id="qr-code-text">ID: PR-2026-089</p>
+            <button onclick="closeModal('qr-modal')" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">Закрыть</button>
+        </div>
+    </div>
+
+    <!-- CHAT MODAL -->
+    <div id="chat-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full h-[480px] flex flex-col shadow-xl overflow-hidden">
+            <div class="p-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                    <span class="text-xs font-bold text-slate-800">Переписка с владельцем</span>
+                </div>
+                <button onclick="closeModal('chat-modal')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <div class="flex-1 p-4 space-y-3 overflow-y-auto text-xs" id="chat-messages">
+                <div class="bg-slate-100 p-2.5 rounded-xl max-w-[80%] text-slate-700">Здравствуйте! Костюм свободнен на даты с 12 по 18 ноября?</div>
+                <div class="bg-brand-700 text-white p-2.5 rounded-xl max-w-[80%] ml-auto">Добрый день! Да, свободен. Готовы оформить заявку.</div>
+            </div>
+            <div class="p-3 border-t border-slate-200 flex space-x-2">
+                <input type="text" id="chat-input" placeholder="Напишите сообщение..." class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none">
+                <button onclick="sendChatMessage()" class="p-2 bg-brand-700 text-white rounded-xl"><i data-lucide="send" class="w-4 h-4"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CREATE REQUEST MODAL -->
+    <div id="request-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white p-6 rounded-2xl max-w-md w-full space-y-4 shadow-xl">
+            <h3 class="font-bold text-slate-800 text-lg">Заявка на реквизит</h3>
+            <p class="text-xs text-slate-500">Укажите предполагаемые даты использования реквизита</p>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">Срок аренды (с - по)</label>
+                    <input type="text" placeholder="12.11.2026 - 18.11.2026" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">Комментарий к заявке</label>
+                    <textarea rows="2" placeholder="Укажите название проекта или спектакля..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs"></textarea>
+                </div>
+            </div>
+            <div class="flex space-x-2 pt-2">
+                <button onclick="closeModal('request-modal')" class="w-1/2 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl">Отмена</button>
+                <button onclick="submitRequest()" class="w-1/2 py-2 bg-brand-700 text-white text-xs font-semibold rounded-xl">Отправить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- JAVASCRIPT LOGIC                           -->
+    <!-- ========================================== -->
+    <script>
+        // MOCK DATA STORE
+        const CATEGORIES = [
+            { name: 'Костюмы', icon: 'shirt', count: 42 },
+            { name: 'Обувь', icon: 'footprints', count: 18 },
+            { name: 'Головные уборы', icon: 'crown', count: 25 },
+            { name: 'Аксессуары', icon: 'sparkles', count: 31 },
+            { name: 'Бутафория', icon: 'wand-2', count: 15 },
+            { name: 'Декорации', icon: 'box', count: 12 },
+        ];
+
+        const PRODUCTS = [
+            {
+                id: '1',
+                title: 'Костюм эпохи Возрождения',
+                category: 'Костюмы',
+                price: 12000,
+                type: 'Аренда',
+                era: 'Возрождение',
+                condition: 'Хорошее',
+                img: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=400&q=80'
+            },
+            {
+                id: '2',
+                title: 'Шляпа винтажная цилиндр',
+                category: 'Головные уборы',
+                price: 3500,
+                type: 'Продажа',
+                era: 'XIX век',
+                condition: 'Отличное',
+                img: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=400&q=80'
+            },
+            {
+                id: '3',
+                title: 'Маска театральная венецианская',
+                category: 'Аксессуары',
+                price: 2000,
+                type: 'Аренда',
+                era: 'Барокко',
+                condition: 'Отличное',
+                img: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=400&q=80'
+            },
+            {
+                id: '4',
+                title: 'Пальто сценическое мужское',
+                category: 'Костюмы',
+                price: 7000,
+                type: 'Продажа',
+                era: 'XIX век',
+                condition: 'Хорошее',
+                img: 'https://images.unsplash.com/photo-1548883354-7622d03aca27?auto=format&fit=crop&w=400&q=80'
+            }
+        ];
+
+        const PAGES = {
+            'catalog': 'Главная / Каталог',
+            'product-detail': 'Карточка товара',
+            'add-listing': 'Создать объявление',
+            'requests': 'Заявки',
+            'my-listings': 'Мои объявления',
+            'favorites': 'Избранное',
+            'profile': 'Профиль'
+        };
+
+        // INITIALIZATION
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            renderListings(PRODUCTS);
+            renderPage(location.hash.slice(1) || 'catalog');
+
+            // Mobile Sidebar Toggle
+            document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+                const sidebar = document.getElementById('sidebar');
+                sidebar.classList.toggle('-translate-x-full');
+            });
+        });
+
+        window.addEventListener('hashchange', () => {
+            renderPage(location.hash.slice(1) || 'catalog');
+        });
+
+        // PAGE NAVIGATION
+        function switchTab(tabId) {
+            const pageId = PAGES[tabId] ? tabId : 'catalog';
+            if (location.hash === `#${pageId}`) {
+                renderPage(pageId);
+            } else {
+                location.hash = pageId;
+            }
+        }
+
+        function renderPage(tabId) {
+            const pageId = PAGES[tabId] ? tabId : 'catalog';
+            document.querySelectorAll('.tab-view').forEach(view => view.classList.add('hidden'));
+            document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('bg-brand-50', 'text-brand-700', 'font-semibold'));
+
+            const targetView = document.getElementById(`view-${pageId}`);
+            if (targetView) targetView.classList.remove('hidden');
+
+            const activeNav = document.getElementById(`nav-${pageId}`);
+            if (activeNav) activeNav.classList.add('bg-brand-50', 'text-brand-700', 'font-semibold');
+
+            document.title = `${PAGES[pageId]} — Костюмы.Реквизит`;
+
+            // Auto Close mobile sidebar if open
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+            document.getElementById('main-content').scrollTo(0, 0);
+        }
+
+        // RENDER PRODUCTS GRID
+        function renderListings(items) {
+            const grid = document.getElementById('listings-grid');
+            document.getElementById('item-count').textContent = items.length;
+
+            if (items.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400 text-xs">Предметы не найдены. Попробуйте изменить параметры фильтра.</div>`;
+                return;
+            }
+
+            grid.innerHTML = items.map(item => `
+                <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition group flex flex-col justify-between">
+                    <div>
+                        <div class="aspect-square bg-slate-100 relative overflow-hidden cursor-pointer" onclick="switchTab('product-detail')">
+                            <img src="${item.img}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                            <span class="absolute top-2.5 left-2.5 bg-slate-900/70 backdrop-blur-md text-white text-[10px] font-semibold px-2 py-0.5 rounded-md">${item.type}</span>
+                        </div>
+                        <div class="p-3.5">
+                            <span class="text-[10px] font-medium text-brand-600 uppercase tracking-wider">${item.category}</span>
+                            <h3 class="text-xs font-bold text-slate-800 mt-0.5 line-clamp-1 hover:text-brand-700 cursor-pointer" onclick="switchTab('product-detail')">${item.title}</h3>
+                            <p class="text-[11px] text-slate-400 mt-0.5">${item.era} • ${item.condition}</p>
+                        </div>
+                    </div>
+                    <div class="p-3.5 pt-0 flex items-center justify-between border-t border-slate-50 mt-2">
+                        <span class="text-sm font-bold text-slate-900">${item.price.toLocaleString('ru-RU')} ₽</span>
+                        <button onclick="switchTab('product-detail')" class="text-xs text-brand-700 hover:underline font-medium">Подробнее</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // FILTER & SORT LOGIC
+        function applyFilters() {
+            let filtered = [...PRODUCTS];
+
+            // Category filter
+            const category = document.getElementById('filter-category').value;
+            if (category) filtered = filtered.filter(item => item.category === category);
+
+            // Type filter
+            const selectedTypes = Array.from(document.querySelectorAll('.filter-type:checked')).map(cb => cb.value);
+            if (selectedTypes.length > 0) {
+                filtered = filtered.filter(item => selectedTypes.includes(item.type));
+            }
+
+            // Era filter
+            const era = document.getElementById('filter-era').value;
+            if (era) filtered = filtered.filter(item => item.era === era);
+
+            // Condition filter
+            const cond = document.getElementById('filter-condition').value;
+            if (cond) filtered = filtered.filter(item => item.condition === cond);
+
+            // Sorting
+            const sort = document.getElementById('sort-select').value;
+            if (sort === 'price-asc') filtered.sort((a, b) => a.price - b.price);
+            if (sort === 'price-desc') filtered.sort((a, b) => b.price - a.price);
+
+            renderListings(filtered);
+        }
+
+        function filterByCategory(catName) {
+            document.getElementById('filter-category').value = catName;
+            applyFilters();
+            scrollToCatalog();
+        }
+
+        function resetFilters() {
+            document.querySelectorAll('.filter-type').forEach(cb => cb.checked = false);
+            document.getElementById('filter-category').value = '';
+            document.getElementById('filter-era').value = '';
+            document.getElementById('filter-condition').value = '';
+            document.getElementById('filter-material').value = '';
+            renderListings(PRODUCTS);
+        }
+
+        function scrollToCatalog() {
+            document.getElementById('catalog-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // PRODUCT DETAIL TABS
+        function setDetailTab(tabKey) {
+            document.querySelectorAll('.detail-tab-btn').forEach(btn => {
+                btn.classList.remove('text-brand-700', 'border-b-2', 'border-brand-700', 'bg-white');
+                btn.classList.add('text-slate-500');
+            });
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+
+            document.getElementById(`tab-btn-${tabKey}`).classList.add('text-brand-700', 'border-b-2', 'border-brand-700', 'bg-white');
+            document.getElementById(`detail-tab-${tabKey}`).classList.remove('hidden');
+        }
+
+        function setDetailImage(src) {
+            document.getElementById('detail-main-img').src = src;
+        }
+
+        // CREATE LISTING HANDLER
+        function handleCreateListing(e) {
+            e.preventDefault();
+            alert('Объявление успешно создано и отправлено на модерацию!');
+            switchTab('catalog');
+        }
+
+        // MODAL HANDLERS & QR CODE GENERATION
+        function openQrModal(codeText) {
+            const modal = document.getElementById('qr-modal');
+            const container = document.getElementById('qrcode-container');
+            container.innerHTML = '';
+            document.getElementById('qr-code-text').textContent = `Код предмета: ${codeText}`;
+
+            new QRCode(container, {
+                text: `https://costumes-prop.ru/item/${codeText}`,
+                width: 140,
+                height: 140
+            });
+
+            modal.classList.remove('hidden');
+        }
+
+        function openChatModal() { document.getElementById('chat-modal').classList.remove('hidden'); }
+        function openRequestModal() { document.getElementById('request-modal').classList.remove('hidden'); }
+
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            if (!input.value.trim()) return;
+            const msgBox = document.getElementById('chat-messages');
+            msgBox.innerHTML += `<div class="bg-brand-700 text-white p-2.5 rounded-xl max-w-[80%] ml-auto">${input.value}</div>`;
+            input.value = '';
+            msgBox.scrollTop = msgBox.scrollHeight;
+        }
+
+        function submitRequest() {
+            closeModal('request-modal');
+            alert('Заявка успешно отправлена владельцу!');
+            switchTab('requests');
+        }
+
+        function updateStatus(btn, newStatus) {
+            const parent = btn.parentElement.parentElement;
+            const badge = parent.querySelector('.bg-amber-100');
+            if (badge) {
+                badge.className = 'bg-emerald-100 text-emerald-800 text-[10px] font-semibold px-2 py-0.5 rounded-md';
+                badge.textContent = newStatus;
+            }
+            btn.remove();
+        }
+    </script>
+</body>
+</html>
