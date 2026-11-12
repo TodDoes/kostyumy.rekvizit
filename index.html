@@ -665,7 +665,7 @@
             { name: 'Декорации', icon: 'box', count: 12 },
         ];
 
-        const PRODUCTS = [
+        let PRODUCTS = [
             {
                 id: '1',
                 title: 'Костюм эпохи Возрождения',
@@ -721,8 +721,10 @@
         // INITIALIZATION
         window.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
-            renderListings(PRODUCTS);
+            loadCatalog();
             renderPage(location.hash.slice(1) || 'catalog');
+
+            document.getElementById('global-search').addEventListener('input', applyFilters);
 
             // Mobile Sidebar Toggle
             document.getElementById('mobile-menu-btn').addEventListener('click', () => {
@@ -730,6 +732,29 @@
                 sidebar.classList.toggle('-translate-x-full');
             });
         });
+
+        // Public catalog data comes from FastAPI. The temporary array above keeps
+        // the design preview usable when this file is opened without the backend.
+        async function loadCatalog() {
+            try {
+                const response = await fetch('/api/items?per_page=20');
+                if (!response.ok) throw new Error('Не удалось загрузить каталог');
+                const items = await response.json();
+                PRODUCTS = items.map(item => ({
+                    id: item.id,
+                    title: item.title,
+                    category: item.category,
+                    price: Number(item.price),
+                    type: item.transfer_type,
+                    era: item.style || 'Не указан',
+                    condition: item.condition,
+                    img: item.photos[0] || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=400&q=80'
+                }));
+            } catch (error) {
+                console.warn(error);
+            }
+            applyFilters();
+        }
 
         window.addEventListener('hashchange', () => {
             renderPage(location.hash.slice(1) || 'catalog');
@@ -798,6 +823,11 @@
         function applyFilters() {
             let filtered = [...PRODUCTS];
 
+            const query = document.getElementById('global-search').value.trim().toLowerCase();
+            if (query) {
+                filtered = filtered.filter(item => [item.title, item.category, item.era].some(value => value.toLowerCase().includes(query)));
+            }
+
             // Category filter
             const category = document.getElementById('filter-category').value;
             if (category) filtered = filtered.filter(item => item.category === category);
@@ -815,6 +845,9 @@
             // Condition filter
             const cond = document.getElementById('filter-condition').value;
             if (cond) filtered = filtered.filter(item => item.condition === cond);
+
+            const material = document.getElementById('filter-material').value.trim().toLowerCase();
+            if (material) filtered = filtered.filter(item => item.title.toLowerCase().includes(material));
 
             // Sorting
             const sort = document.getElementById('sort-select').value;
